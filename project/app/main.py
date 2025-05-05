@@ -1,42 +1,39 @@
-import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from fastapi import FastAPI, Depends
+import logging
+import sys
+from fastapi import FastAPI
+from app.db import sessionmanager
+from contextlib import asynccontextmanager
+from app.api import ping
+from app.config import get_settings
 
-from app.config import get_settings, Settings
-from app.models.sqlalchemy import Base  # Import the model
-
-# SQLAlchemy setup
-DATABASE_URL = os.environ.get("DATABASE_URL")
-
-engine = create_async_engine(DATABASE_URL, echo=True)
-async_session = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+settings = get_settings()
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.DEBUG if settings.log_level == "DEBUG" else logging.INFO,
 )
 
-app = FastAPI()
 
-# Dependency to get DB session
-async def get_db():
-    async with async_session() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Function that handles startup and shutdown events.
+    To understand more, read https://fastapi.tiangolo.com/advanced/events/
+    """
+    yield
+    if sessionmanager._engine is not None:
+        # Close the DB connection
+        await sessionmanager.close()
 
-# Create tables after all models are imported
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
-#@app.on_event("startup")
-#async def startup_event():
-#    await init_db()
+def create_application() -> FastAPI:
+    application = FastAPI(
+        lifespan=lifespan,
+        title=settings.project_name,
+    )
 
-@app.get("/ping")
-async def pong(settings: Settings = Depends(get_settings)):
-    return {
-        "ping": "pong!",
-        "environment": settings.environment,
-        "testing": settings.testing,
-    }
+    application.include_router(ping.router)
+
+    return application
+
+
+app = create_application()
