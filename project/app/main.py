@@ -1,10 +1,12 @@
 import logging
 import sys
-from fastapi import FastAPI
-from app.db import sessionmanager
 from contextlib import asynccontextmanager
-from app.api import ping
+
+from fastapi import FastAPI
+
+from app.api import ping, summaries
 from app.config import get_settings
+from app.db import sessionmanager
 
 settings = get_settings()
 logging.basicConfig(
@@ -32,6 +34,9 @@ def create_application() -> FastAPI:
     )
 
     application.include_router(ping.router)
+    application.include_router(
+        summaries.router, prefix="/summaries", tags=["summaries"]
+    )
 
     return application
 
