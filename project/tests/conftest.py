@@ -30,26 +30,23 @@ def anyio_backend():
 
 @pytest.fixture(scope="module")
 async def test_app_with_db():
-    # Set up the test database engine and session
-    engine = create_async_engine(DATABASE_TEST_URL, echo=True)
-    TestingSessionLocal = sessionmaker(
-        bind=engine, class_=AsyncSession, expire_on_commit=False
-    )
-
-    # Create the tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Create a new session manager for the test DB
+    test_sessionmanager = DatabaseSessionManager(DATABASE_TEST_URL, {"echo": False})
 
     # Dependency override
-    async def override_get_db():
-        async with TestingSessionLocal() as session:
+    async def override_get_db_session():
+        async with test_sessionmanager.session() as session:
             yield session
 
-    app.dependency_overrides[get_db_session] = override_get_db
+    app = create_application()
+    app.dependency_overrides[get_db_session] = override_get_db_session
 
-    # Use httpx.AsyncClient for async FastAPI testing
-    from httpx import ASGITransport, AsyncClient
+    # Create tables
+    async with test_sessionmanager.connect() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
+    # Use httpx.AsyncClient with ASGITransport
+    from httpx import AsyncClient, ASGITransport
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
