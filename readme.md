@@ -6,3 +6,11 @@ Run migrations
 
 Run tests
 `docker compose exec web python -m pytest`
+
+Insert dummy data
+```
+curl -X POST http://localhost:8004/summaries/ \
+  -H "Content-Type: application/json" \
+  -d '{"url": "http://testdriven.io"}'
+{"url":"http://testdriven.io","id":2}%  
+```
