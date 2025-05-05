@@ -1,11 +1,10 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from fastapi import FastAPI, Depends
 
 from app.config import get_settings, Settings
-from app.models.sqlalchemy import Base, TextSummary  # Import the model
+from app.models.sqlalchemy import Base  # Import the model
 
 # SQLAlchemy setup
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -30,9 +29,9 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-@app.on_event("startup")
-async def startup_event():
-    await init_db()
+#@app.on_event("startup")
+#async def startup_event():
+#    await init_db()
 
 @app.get("/ping")
 async def pong(settings: Settings = Depends(get_settings)):
