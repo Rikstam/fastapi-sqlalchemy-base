@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,3 +31,8 @@ async def read_summary(
     summary = await crud.get(id, db)
 
     return summary
+
+
+@router.get("/", response_model=List[SummarySchema])
+async def read_all_summaries(db: AsyncSession = Depends(get_db_session)) -> List[SummarySchema]:
+    return await crud.get_all(db)

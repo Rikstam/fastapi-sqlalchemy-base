@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -22,3 +22,8 @@ async def get(id: int, db: AsyncSession) -> Union[TextSummary, None]:
     result = await db.execute(select(TextSummary).where(TextSummary.id == id))
     summary = result.scalars().first()
     return summary
+
+
+async def get_all(db: AsyncSession) -> List[TextSummary]:
+    result = await db.execute(select(TextSummary))
+    return result.scalars().all()
