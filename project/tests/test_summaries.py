@@ -105,6 +105,20 @@ async def test_remove_summary_incorrect_id(test_app_with_db):
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
 
+    response = await test_app_with_db.delete("/summaries/0/")
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "ctx": {"gt": 0},
+                "input": "0",
+                "loc": ["path", "id"],
+                "msg": "Input should be greater than 0",
+                "type": "greater_than",
+            }
+        ]
+    }
+
 
 @pytest.mark.anyio
 async def test_update_summary(test_app_with_db):
@@ -134,6 +148,23 @@ async def test_update_summary_incorrect_id(test_app_with_db):
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
+
+    response = await test_app_with_db.put(
+        f"/summaries/0/",
+        data=json.dumps({"url": "https://foo.bar/", "summary": "updated!"})
+    )
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "ctx": {"gt": 0},
+                "input": "0",
+                "loc": ["path", "id"],
+                "msg": "Input should be greater than 0",
+                "type": "greater_than",
+            }
+        ]
+    }
 
 
 @pytest.mark.anyio
@@ -168,21 +199,28 @@ async def test_update_summary_invalid_json(test_app_with_db):
 @pytest.mark.anyio
 async def test_update_summary_invalid_keys(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
+        "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
     summary_id = response.json()["id"]
 
     response = await test_app_with_db.put(
-        f"/summaries/{summary_id}/", data=json.dumps({"url": "https://foo.bar"})
+        f"/summaries/{summary_id}/", data=json.dumps({"url": "https://foo.bar/"})
     )
     assert response.status_code == 422
     assert response.json() == {
         "detail": [
             {
-                "input": {"url": "https://foo.bar"},
+                "input": {"url": "https://foo.bar/"},
                 "loc": ["body", "summary"],
                 "msg": "Field required",
                 "type": "missing",
             }
         ]
     }
+
+    response = await test_app_with_db.put(
+        f"/summaries/{summary_id}/",
+        data=json.dumps({"url": "invalid://url", "summary": "updated!"})
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == "URL scheme should be 'http' or 'https'"

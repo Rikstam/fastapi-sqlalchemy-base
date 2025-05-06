@@ -45,7 +45,7 @@ async def read_all_summaries(
 
 @router.delete("/{id}/", response_model=SummaryResponseSchema)
 async def delete_summary(
-    id: int, db: AsyncSession = Depends(get_db_session)
+    id: int = Path(..., gt=0), db: AsyncSession = Depends(get_db_session)
 ) -> SummaryResponseSchema:
     summary = await crud.get(id, db)
     if not summary:
@@ -58,8 +58,8 @@ async def delete_summary(
 
 @router.put("/{id}/", response_model=SummarySchema)
 async def update_summary(
-    id: int,
     payload: SummaryUpdatePayloadSchema,
+    id: int = Path(..., gt=0),
     db: AsyncSession = Depends(get_db_session),
 ) -> SummarySchema:
     summary = await crud.put(id, payload, db)

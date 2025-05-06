@@ -21,5 +21,5 @@ class SummarySchema(BaseModel):
 
 
 class SummaryUpdatePayloadSchema(BaseModel):
-    url: str
+    url: AnyHttpUrl
     summary: str
