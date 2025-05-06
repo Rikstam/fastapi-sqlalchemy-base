@@ -6,10 +6,10 @@ import pytest
 @pytest.mark.anyio
 async def test_create_summary(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", json={"url": "http://testdriven.io"}
+        "/summaries/", json={"url": "http://testdriven.io/"}
     )
     assert response.status_code == 201
-    assert response.json()["url"] == "http://testdriven.io"
+    assert response.json()["url"] == "http://testdriven.io/"
 
 
 @pytest.mark.anyio
@@ -26,12 +26,19 @@ async def test_create_summaries_invalid_json(test_app_with_db):
             }
         ]
     }
+    response = await test_app_with_db.post(
+        "/summaries/", data=json.dumps({"url": "invalid://url"})
+    )
+    assert response.status_code == 422
+    assert (
+        response.json()["detail"][0]["msg"] == "URL scheme should be 'http' or 'https'"
+    )
 
 
 @pytest.mark.anyio
 async def test_read_summary(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
+        "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
     summary_id = response.json()["id"]
 
@@ -40,7 +47,7 @@ async def test_read_summary(test_app_with_db):
 
     response_dict = response.json()
     assert response_dict["id"] == summary_id
-    assert response_dict["url"] == "https://foo.bar"
+    assert response_dict["url"] == "https://foo.bar/"
     assert response_dict["summary"]
     assert response_dict["created_at"]
 
@@ -69,7 +76,7 @@ async def test_read_summary_incorrect_id(test_app_with_db):
 @pytest.mark.anyio
 async def test_read_all_summaries(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
+        "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
     summary_id = response.json()["id"]
 
@@ -83,13 +90,13 @@ async def test_read_all_summaries(test_app_with_db):
 @pytest.mark.anyio
 async def test_remove_summary(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
+        "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
     summary_id = response.json()["id"]
 
     response = await test_app_with_db.delete(f"/summaries/{summary_id}/")
     assert response.status_code == 200
-    assert response.json() == {"id": summary_id, "url": "https://foo.bar"}
+    assert response.json() == {"id": summary_id, "url": "https://foo.bar/"}
 
 
 @pytest.mark.anyio
@@ -102,19 +109,19 @@ async def test_remove_summary_incorrect_id(test_app_with_db):
 @pytest.mark.anyio
 async def test_update_summary(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
+        "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
     summary_id = response.json()["id"]
 
     response = await test_app_with_db.put(
         f"/summaries/{summary_id}/",
-        data=json.dumps({"url": "https://foo.bar", "summary": "updated!"}),
+        data=json.dumps({"url": "https://foo.bar/", "summary": "updated!"}),
     )
     assert response.status_code == 200
 
     response_dict = response.json()
     assert response_dict["id"] == summary_id
-    assert response_dict["url"] == "https://foo.bar"
+    assert response_dict["url"] == "https://foo.bar/"
     assert response_dict["summary"] == "updated!"
     assert response_dict["created_at"]
 
@@ -123,7 +130,7 @@ async def test_update_summary(test_app_with_db):
 async def test_update_summary_incorrect_id(test_app_with_db):
     response = await test_app_with_db.put(
         "/summaries/999/",
-        data=json.dumps({"url": "https://foo.bar", "summary": "updated!"}),
+        data=json.dumps({"url": "https://foo.bar/", "summary": "updated!"}),
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
@@ -132,7 +139,7 @@ async def test_update_summary_incorrect_id(test_app_with_db):
 @pytest.mark.anyio
 async def test_update_summary_invalid_json(test_app_with_db):
     response = await test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
+        "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
     summary_id = response.json()["id"]
 

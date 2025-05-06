@@ -9,7 +9,7 @@ from app.models.sqlalchemy import TextSummary
 
 async def post(payload: SummaryPayloadSchema, db: AsyncSession) -> int:
     summary = TextSummary(
-        url=payload.url,
+        url=str(payload.url),
         summary="dummy summary",
     )
     db.add(summary)
@@ -47,7 +47,7 @@ async def put(
         return None
 
     # Update fields
-    summary.url = payload.url
+    summary.url = str(payload.url)
     summary.summary = payload.summary
 
     await db.commit()
