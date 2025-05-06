@@ -5,7 +5,7 @@ Run migrations
 `docker-compose exec web alembic upgrade head`
 
 Run tests
-`docker compose exec web python -m pytest`
+`docker compose exec web python -m pytest -p no:warnings`
 
 Insert dummy data
 ```

@@ -1,13 +1,15 @@
 # project/app/models/sqlalchemy.py
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm  import declarative_base
+
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import declarative_base
 
 # Define the base class for declarative class definitions
 Base = declarative_base()
 
+
 class TextSummary(Base):
-    __tablename__ = 'text_summary'  # Define the table name
+    __tablename__ = "text_summary"  # Define the table name
 
     id = Column(Integer, primary_key=True, autoincrement=True)  # Add a primary key
     url = Column(String, nullable=False)

@@ -1,4 +1,7 @@
+from typing import Union
+
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.models.pydantic import SummaryPayloadSchema
 from app.models.sqlalchemy import TextSummary
@@ -13,3 +16,9 @@ async def post(payload: SummaryPayloadSchema, db: AsyncSession) -> int:
     await db.commit()
     await db.refresh(summary)  # To get the generated ID and other defaults
     return summary.id
+
+
+async def get(id: int, db: AsyncSession) -> Union[TextSummary, None]:
+    result = await db.execute(select(TextSummary).where(TextSummary.id == id))
+    summary = result.scalars().first()
+    return summary

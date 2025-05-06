@@ -6,7 +6,7 @@ from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from alembic.script import ScriptDirectory
 from app.config import Settings, get_settings
-from app.db import get_db_session
+from app.db import get_db_session, DatabaseSessionManager
 from app.main import app, create_application
 from app.models.sqlalchemy import Base
 from asyncpg import Connection
@@ -51,10 +51,10 @@ async def test_app_with_db():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-    # Drop the tables after the test
-    async with engine.begin() as conn:
+    # Drop tables and close engine
+    async with test_sessionmanager.connect() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+    await test_sessionmanager.close()
 
 
 def run_migrations(connection: Connection):
