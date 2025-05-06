@@ -42,3 +42,10 @@ normal run
 # list the 2 slowest tests
 `docker compose exec web python -m pytest --durations=2`
 
+# with coverage
+`docker compose exec web python -m pytest --cov="."`
+
+# coverage html report
+`docker compose exec web python -m pytest --cov="." --cov-report html`
+
+![Continuous Integration and Delivery](https://github.com/Rikstam/fastapi-sqlalchemy-base/workflows/Continuous%20Integration%20and%20Delivery/badge.svg?branch=main)
