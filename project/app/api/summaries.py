@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud
@@ -27,9 +27,11 @@ async def create_summary(
 
 @router.get("/{id}/", response_model=SummarySchema)
 async def read_summary(
-    id: int, db: AsyncSession = Depends(get_db_session)
+    id: int = Path(..., gt=0), db: AsyncSession = Depends(get_db_session)
 ) -> SummarySchema:
     summary = await crud.get(id, db)
+    if not summary:
+        raise HTTPException(status_code=404, detail="Summary not found")
 
     return summary
 
