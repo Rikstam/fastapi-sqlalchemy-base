@@ -8,3 +8,5 @@ httpx==0.28.1
 pytest==8.3.5
 gunicorn==22.0.0
 pytest-cov==6.1.1
+lxml-html-clean==0.4.2
+newspaper3k==0.2.8
