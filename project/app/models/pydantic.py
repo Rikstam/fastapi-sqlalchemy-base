@@ -18,3 +18,8 @@ class SummarySchema(BaseModel):
 
     class Config:
         orm_mode = True  # This allows Pydantic to work with SQLAlchemy models
+
+
+class SummaryUpdatePayloadSchema(BaseModel):
+    url: str
+    summary: str

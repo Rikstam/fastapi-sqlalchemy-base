@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud
@@ -9,6 +9,7 @@ from app.models.pydantic import (
     SummaryPayloadSchema,
     SummaryResponseSchema,
     SummarySchema,
+    SummaryUpdatePayloadSchema,
 )
 
 router = APIRouter()
@@ -34,5 +35,33 @@ async def read_summary(
 
 
 @router.get("/", response_model=List[SummarySchema])
-async def read_all_summaries(db: AsyncSession = Depends(get_db_session)) -> List[SummarySchema]:
+async def read_all_summaries(
+    db: AsyncSession = Depends(get_db_session),
+) -> List[SummarySchema]:
     return await crud.get_all(db)
+
+
+@router.delete("/{id}/", response_model=SummaryResponseSchema)
+async def delete_summary(
+    id: int, db: AsyncSession = Depends(get_db_session)
+) -> SummaryResponseSchema:
+    summary = await crud.get(id, db)
+    if not summary:
+        raise HTTPException(status_code=404, detail="Summary not found")
+
+    await crud.delete(id, db)
+
+    return summary
+
+
+@router.put("/{id}/", response_model=SummarySchema)
+async def update_summary(
+    id: int,
+    payload: SummaryUpdatePayloadSchema,
+    db: AsyncSession = Depends(get_db_session),
+) -> SummarySchema:
+    summary = await crud.put(id, payload, db)
+    if not summary:
+        raise HTTPException(status_code=404, detail="Summary not found")
+
+    return summary
