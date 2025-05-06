@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud
@@ -11,15 +11,20 @@ from app.models.pydantic import (
     SummarySchema,
     SummaryUpdatePayloadSchema,
 )
+from app.summarizer import generate_summary
 
 router = APIRouter()
 
 
 @router.post("/", response_model=SummaryResponseSchema, status_code=201)
 async def create_summary(
-    payload: SummaryPayloadSchema, db: AsyncSession = Depends(get_db_session)
+    payload: SummaryPayloadSchema,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db_session),
 ) -> SummaryResponseSchema:
     summary_id = await crud.post(payload, db)
+
+    background_tasks.add_task(generate_summary, summary_id, str(payload.url))
 
     response_object = {"id": summary_id, "url": payload.url}
     return response_object

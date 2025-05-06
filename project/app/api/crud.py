@@ -5,14 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.pydantic import SummaryPayloadSchema, SummaryUpdatePayloadSchema
 from app.models.sqlalchemy import TextSummary
-from app.summarizer import generate_summary
 
 
 async def post(payload: SummaryPayloadSchema, db: AsyncSession) -> int:
-    article_summary = generate_summary(str(payload.url))
     summary = TextSummary(
         url=str(payload.url),
-        summary=article_summary,
+        summary="",
     )
     db.add(summary)
     await db.commit()

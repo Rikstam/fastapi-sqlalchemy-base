@@ -1,10 +1,19 @@
 import json
 
 import pytest
+from app.api import summaries
+
+
+@pytest.fixture(autouse=True)
+def mock_generate_summary_fixture(monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
 
 @pytest.mark.anyio
-async def test_create_summary(test_app_with_db):
+async def test_create_summary(test_app_with_db, monkeypatch):
     response = await test_app_with_db.post(
         "/summaries/", json={"url": "http://testdriven.io/"}
     )
@@ -36,7 +45,7 @@ async def test_create_summaries_invalid_json(test_app_with_db):
 
 
 @pytest.mark.anyio
-async def test_read_summary(test_app_with_db):
+async def test_read_summary(test_app_with_db, monkeypatch):
     response = await test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
@@ -48,7 +57,7 @@ async def test_read_summary(test_app_with_db):
     response_dict = response.json()
     assert response_dict["id"] == summary_id
     assert response_dict["url"] == "https://foo.bar/"
-    assert response_dict["summary"]
+    assert response_dict["summary"] == ""
     assert response_dict["created_at"]
 
 
@@ -74,7 +83,7 @@ async def test_read_summary_incorrect_id(test_app_with_db):
 
 
 @pytest.mark.anyio
-async def test_read_all_summaries(test_app_with_db):
+async def test_read_all_summaries(test_app_with_db, monkeypatch):
     response = await test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
@@ -88,7 +97,7 @@ async def test_read_all_summaries(test_app_with_db):
 
 
 @pytest.mark.anyio
-async def test_remove_summary(test_app_with_db):
+async def test_remove_summary(test_app_with_db, monkeypatch):
     response = await test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
@@ -121,7 +130,7 @@ async def test_remove_summary_incorrect_id(test_app_with_db):
 
 
 @pytest.mark.anyio
-async def test_update_summary(test_app_with_db):
+async def test_update_summary(test_app_with_db, monkeypatch):
     response = await test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar/"})
     )
@@ -207,7 +216,6 @@ async def test_update_summary_invalid(
     assert response.status_code == status_code
     print(response.json()["detail"])
     assert response.json()["detail"] == detail
-
 
 @pytest.mark.anyio
 async def test_update_summary_invalid_url(test_app_with_db):

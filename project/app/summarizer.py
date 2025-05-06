@@ -1,8 +1,15 @@
+import asyncio
+import logging
+
 import nltk
 from newspaper import Article
+from sqlalchemy import select
+
+from app.db import sessionmanager  # Import your session manager
+from app.models.sqlalchemy import TextSummary
 
 
-def generate_summary(url: str) -> str:
+async def generate_summary(summary_id: int, url: str) -> None:
     article = Article(url)
     article.download()
     article.parse()
@@ -14,4 +21,14 @@ def generate_summary(url: str) -> str:
     finally:
         article.nlp()
 
-    return article.summary
+    summary_text = article.summary
+
+    async with sessionmanager.session() as db:
+        result = await db.execute(
+            select(TextSummary).where(TextSummary.id == summary_id)
+        )
+        summary = result.scalars().first()
+        if summary:
+            summary.summary = summary_text
+            await db.commit()
+            await db.refresh(summary)

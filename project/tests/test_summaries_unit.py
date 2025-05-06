@@ -5,6 +5,13 @@ import pytest
 from app.api import crud, summaries
 
 
+@pytest.fixture(autouse=True)
+def mock_generate_summary_fixture(monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
+
 @pytest.mark.anyio
 async def test_create_summary(test_app_with_db, monkeypatch):
     test_request_payload = {"url": "https://foo.bar"}
